@@ -1,0 +1,22 @@
+{
+  "repositories": [
+    {
+      "name": "awesome",
+      "url": "amd-jmacaran/awesome",
+      "branch": "main",
+      "category": "projects"
+    },
+    {
+      "name": "cli",
+      "url": "amd-jmacaran/cli",
+      "branch": "main",
+      "category": "projects"
+    },
+    {
+      "name": "dotfiles",
+      "url": "amd-jmacaran/dotfiles",
+      "branch": "main",
+      "category": "shared"
+    }
+  ]
+}
