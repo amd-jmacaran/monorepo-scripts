@@ -57,10 +57,10 @@ def main(argv: Optional[List[str]] = None) -> None:
         pr = client.get_pr_by_head_branch(entry.url, branch)
         if pr:
             number = pr["number"]
-            client.close_pr_and_delete_branch(entry.repo, number)
-            logger.info(f"Closing PR #{number} in {entry.repo} for branch {branch}")
+            client.close_pr_and_delete_branch(entry.url, number)
+            logger.info(f"Closing PR #{number} in {entry.url} for branch {branch}")
         else:
-            logger.info(f"No open PR found in {entry.repo} for branch {branch}")
+            logger.info(f"No open PR found in {entry.url} for branch {branch}")
 
 if __name__ == "__main__":
     main()
