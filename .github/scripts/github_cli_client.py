@@ -111,7 +111,7 @@ class GitHubCLIClient:
 
     def close_pr_and_delete_branch(self, repo: str, pr_number: int, dry_run: Optional[bool] = False) -> None:
         """Close a pull request and delete the associated branch using the GitHub CLI."""
-        cmd = ["gh", "pr", "close", str(pr_number), "--repo", repo, "--delete-branch"]
+        cmd = ["pr", "close", str(pr_number), "--repo", repo, "--delete-branch"]
         if dry_run:
             logger.info(f"Dry run: The pull request #{pr_number} would be closed and the branch would be deleted in repo '{repo}'")
         else:
