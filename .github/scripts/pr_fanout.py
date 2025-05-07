@@ -18,7 +18,7 @@ Arguments:
 Example Usage:
 
     To run in debug mode and perform a dry-run (no changes made):
-    python pr-fanout.py --repo ROCm/rocm-libraries --pr 123 --subtrees "$(printf 'projects/rocBLAS\nprojects/hipBLASLt\nshared/rocSPARSE')" --dry-run --debug
+        python pr-fanout.py --repo ROCm/rocm-libraries --pr 123 --subtrees "$(printf 'projects/rocBLAS\nprojects/hipBLASLt\nshared/rocSPARSE')" --dry-run --debug
 """
 
 import argparse
