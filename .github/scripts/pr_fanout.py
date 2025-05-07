@@ -68,7 +68,7 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         if bash_path:
             ulimit_cmd = ["ulimit", "-s", "65532"]
             combined_cmd = ulimit_cmd + ["&&"] + push_cmd
-            subprocess.run(combined_cmd, shell=True, executable=bash_path, check=True)
+            subprocess.run(combined_cmd, check=True)
         else:
             subprocess.run(push_cmd, check=True)
 
