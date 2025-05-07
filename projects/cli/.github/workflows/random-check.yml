@@ -1,0 +1,29 @@
+name: Random Check - cli
+on:
+  pull_request:
+
+jobs:
+  random-check:
+    name: Random Check - ${{ github.repository }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - name: Simulate random delay
+        run: |
+          SECONDS=$(( RANDOM % 10 + 1 ))
+          echo "Sleeping for $SECONDS seconds..."
+          sleep $SECONDS
+
+      - name: Randomly pass or fail
+        run: |
+          RESULT=$(( RANDOM % 2 ))
+          echo "Random result: $RESULT"
+          if [ "$RESULT" -eq 0 ]; then
+            echo "✅ Success!"
+            exit 0
+          else
+            echo "❌ Simulated failure!"
+            exit 1
+          fi
