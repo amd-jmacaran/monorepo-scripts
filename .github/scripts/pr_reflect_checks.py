@@ -55,11 +55,13 @@ def reflect_checks(client: GitHubAPIClient, monorepo: str, pr_number: int, confi
         for check in checks:
             check_name = f"{entry.name}: {check['name']}"
             status = check["status"]
+            details_url = check["details_url"]
             conclusion = check["conclusion"] or "neutral"
             summary = check.get("output", {}).get("summary", "")
             logger.info(f"[{check_name}] Status: {status} | Conclusion: {conclusion}")
+            logger.info(f"[{check_name}] URL: {details_url}")
             if not dry_run:
-                client.upsert_check_run(monorepo, check_name, pr_number, status, conclusion, summary)
+                client.upsert_check_run(monorepo, check_name, pr_number, status, details_url, conclusion, summary)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR checks reflection logic."""
