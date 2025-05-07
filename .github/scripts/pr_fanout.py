@@ -22,15 +22,13 @@ Example Usage:
 """
 
 import argparse
-import sys
+import shutil
 import subprocess
 import logging
 from typing import List, Optional
 from github_cli_client import GitHubCLIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
-
-MIN_RECURSION_LIMIT = 10000
 
 logger = logging.getLogger(__name__)
 
@@ -66,18 +64,13 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
         # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
         # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
-        # bash_path = shutil.which("bash")
-        #if bash_path:
-        #    subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
-        #else:
-        def_recursion_limit = sys.getrecursionlimit()
-        if (def_recursion_limit < MIN_RECURSION_LIMIT):
-            logger.warning(f"Default recursion limit {def_recursion_limit} is less than minimum {MIN_RECURSION_LIMIT}. Setting it to {MIN_RECURSION_LIMIT}.")
-            sys.setrecursionlimit(MIN_RECURSION_LIMIT)
-        subprocess.run(push_cmd, check=True)
-        if (def_recursion_limit < MIN_RECURSION_LIMIT):
-            logger.warning(f"Resetting recursion limit to {def_recursion_limit}.")
-            sys.setrecursionlimit(def_recursion_limit)
+        bash_path = shutil.which("bash")
+        if bash_path:
+            ulimit_cmd = ["ulimit", "-s", "65532"]
+            combined_cmd = ulimit_cmd + "&&" + push_cmd
+            subprocess.run(combined_cmd, Shell=True, executable=bash_path, check=True)
+        else:
+            subprocess.run(push_cmd, check=True)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
