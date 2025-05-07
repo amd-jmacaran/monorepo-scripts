@@ -57,7 +57,7 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
 def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
     """Push the specified subtree to the sub-repo using `git subtree push`."""
     # the output for git subtree push spits out thousands of lines for history preservation, suppress it
-    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch, "--quiet"]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
