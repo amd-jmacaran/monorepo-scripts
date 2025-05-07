@@ -22,6 +22,7 @@ Example Usage:
 """
 
 import argparse
+import shutil
 import subprocess
 import logging
 from typing import List, Optional
@@ -34,8 +35,8 @@ logger = logging.getLogger(__name__)
 def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
     """Parse command-line arguments."""
     parser = argparse.ArgumentParser(description="Fanout monorepo PR to sub-repos.")
-    parser.add_argument("--repo", required=True, help="Full  repository name (e.g., org/monorepo)")
-    parser.add_argument("--pr", required=True, help="Pull request number")
+    parser.add_argument("--repo", required=True, help="Full  repository name (e.g., org/repo)")
+    parser.add_argument("--pr", required=True, type=int, help="Pull request number")
     parser.add_argument("--subtrees", required=True, help="Newline-separated list of changed subtrees (category/name)")
     parser.add_argument("--config", required=False, default=".github/repos-config.json", help="Path to the repos-config.json file")
     parser.add_argument("--dry-run", action="store_true", help="If set, only logs actions without making changes.")
@@ -56,10 +57,20 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
 
 def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
     """Push the specified subtree to the sub-repo using `git subtree push`."""
-    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
+    # the output for git subtree push spits out thousands of lines for history preservation, suppress it
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch, "--quiet"]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
-        subprocess.run(push_cmd, check=True)
+        # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
+        # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
+        # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
+        bash_path = shutil.which("bash")
+        if bash_path:
+            ulimit_cmd = ["ulimit", "-s", "65532"]
+            combined_cmd = ulimit_cmd + ["&&"] + push_cmd
+            subprocess.run(combined_cmd, Shell=True, executable=bash_path, check=True)
+        else:
+            subprocess.run(push_cmd, check=True)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
@@ -75,8 +86,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         branch = f"monorepo-pr-{args.pr}-{entry.name}"
         prefix = f"{entry.category}/{entry.name}"
         subrepo_full_url = f"https://github.com/{entry.url}.git"
-        pr_title = f"[Fanout] Sync {args.repo} PR #{args.pr} to {entry.name}"
-        pr_body = f"This is an automated PR for subtree `{entry.category}/{entry.name}` from monorepo PR #{args.pr}."
+        pr_title = f"[DO NOT MERGE] [Fanout] [Monorepo] PR #{args.pr} to {entry.name}"
+        pr_body = (
+            f"This is an automated PR for subtree `{entry.category}/{entry.name}` "
+            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr}).\n\n"
+            f"PLEASE DO NOT MERGE OR TOUCH THIS PR, AUTOMATED WORKFLOWS FROM THE MONOREPO ARE USING IT."
+        )
         logger.debug(f"\nProcessing subtree: {entry.category}/{entry.name}")
         logger.debug(f"\tPrefix: {prefix}")
         logger.debug(f"\tBranch: {branch}")
