@@ -88,9 +88,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         if not pr_exists:
             if not args.dry_run:
                 client.pr_create(entry.url, entry.branch, branch, pr_title, pr_body)
-        else:
-            if not args.dry_run:
-                client.pr_edit(entry.url, branch, pr_title, pr_body)
+                logger.info(f"Created PR in {entry.url} for branch {branch}")
 
 if __name__ == "__main__":
     main()

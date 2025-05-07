@@ -101,44 +101,26 @@ class GitHubCLIClient:
         self._run_gh_command(cmd, dry_run=dry_run)
         logger.info(f"Created PR from {head} to {base} in {repo}.")
 
-    def pr_edit(self, repo: str, head: str, title: str, body: str, dry_run: Optional[bool] = False) -> None:
-        """Edit an existing pull request (title/body)."""
-        cmd = [
-            "pr", "edit",
-            "--repo", repo,
-            "--head", head,
-            "--title", title,
-            "--body", body
-        ]
-        self._run_gh_command(cmd, dry_run=dry_run)
-        logger.info(f"Edited PR for head '{head}' in {repo}.")
-
-    def sync_labels(self, source_repo: str, target_repo: str, labels: List[str], dry_run: Optional[bool] = False) -> None:
+    def sync_labels(self, target_repo: str, pr_number: int, labels: List[str], dry_run: Optional[bool] = False) -> None:
         """Sync labels from the source repo to the target repo (only apply existing labels)."""
-        logger.debug(f"Syncing labels from {source_repo} to {target_repo}.")
-        result = self._run_gh_command(
-            ["label", "list", "--repo", source_repo, "--json", "name"]
-        )
-        source_repo_labels = {label["name"] for label in json.loads(result.stdout)}
+        logger.debug(f"Syncing labels to {target_repo} PR #{pr_number}.")
         result = self._run_gh_command(
             ["label", "list", "--repo", target_repo, "--json", "name"]
         )
         target_repo_labels = {label["name"] for label in json.loads(result.stdout)}
         labels_set = set(labels)
-        logger.debug(f"Source repo labels: {source_repo_labels}")
-        logger.debug(f"Target repo labels: {target_repo_labels}")
-        logger.debug(f"Labels to sync: {labels_set}")
         labels_to_apply = labels_set & target_repo_labels
         # Apply labels that exist in both source PR and target repos
         # Wrap in quotes if label contains spaces
         labels_arg = ",".join(f'"{label}"' if " " in label else label for label in labels_to_apply)
         cmd = [
             "pr", "edit",
+            str(pr_number),
             "--repo", target_repo,
             "--add-label", labels_arg
         ]
         if not dry_run:
             self._run_gh_command(cmd, dry_run=dry_run)
-            logger.info(f"Applied labels '{labels_arg}' to PR in {target_repo}.")
+            logger.info(f"Applied labels '{labels_arg}' to PR #{pr_number} in {target_repo}.")
         else:
-            logger.info(f"Dry run: Labels '{labels_arg}' would be applied to PR in {target_repo}.")
+            logger.info(f"Dry run: Labels '{labels_arg}' would be applied to PR #{pr_number} in {target_repo}.")
