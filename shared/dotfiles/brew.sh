@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+echo "TEST CASE 1"
+
 # Install command-line tools using Homebrew.
 
 # Make sure we’re using the latest Homebrew.
