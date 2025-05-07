@@ -30,6 +30,8 @@ from github_cli_client import GitHubCLIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 
+MIN_RECURSION_LIMIT = 10000
+
 logger = logging.getLogger(__name__)
 
 def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -57,7 +59,8 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
 
 def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
     """Push the specified subtree to the sub-repo using `git subtree push`."""
-    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
+    # the output for git subtree push spits out thousands of lines for history preservation, suppress it
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch, "--quiet"]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
@@ -68,12 +71,11 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         #    subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
         #else:
         def_recursion_limit = sys.getrecursionlimit()
-        min_recursion_limit = 10000
-        if (def_recursion_limit < min_recursion_limit):
-            logger.warning(f"Default recursion limit {def_recursion_limit} is less than minimum {min_recursion_limit}. Setting it to {min_recursion_limit}.")
-            sys.setrecursionlimit(min_recursion_limit)
+        if (def_recursion_limit < MIN_RECURSION_LIMIT):
+            logger.warning(f"Default recursion limit {def_recursion_limit} is less than minimum {MIN_RECURSION_LIMIT}. Setting it to {MIN_RECURSION_LIMIT}.")
+            sys.setrecursionlimit(MIN_RECURSION_LIMIT)
         subprocess.run(push_cmd, check=True)
-        if (def_recursion_limit < min_recursion_limit):
+        if (def_recursion_limit < MIN_RECURSION_LIMIT):
             logger.warning(f"Resetting recursion limit to {def_recursion_limit}.")
             sys.setrecursionlimit(def_recursion_limit)
 
