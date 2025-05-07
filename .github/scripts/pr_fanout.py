@@ -23,6 +23,7 @@ Example Usage:
 
 import argparse
 import subprocess
+import shutil
 import logging
 from typing import List, Optional
 from github_cli_client import GitHubCLIClient
@@ -59,7 +60,13 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
     push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
-        subprocess.run(push_cmd, check=True)
+        # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
+        # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
+        bash_path = shutil.which("bash")
+        if bash_path:
+            subprocess.run(push_cmd, shell=True, executable=bash_path, check=True)
+        else:
+            subprocess.run(push_cmd, check=True)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
