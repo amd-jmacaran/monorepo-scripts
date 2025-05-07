@@ -29,7 +29,6 @@ from github_cli_client import GitHubCLIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
@@ -65,9 +64,9 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
     args = parse_arguments(argv)
-    if args.debug:
-        logger.setLevel(logging.DEBUG)
-
+    logging.basicConfig(
+        level=logging.DEBUG if args.debug else logging.INFO
+    )
     client = GitHubCLIClient()
     config = load_repo_config(args.config)
     subtrees = [line.strip() for line in args.subtrees.splitlines() if line.strip()]

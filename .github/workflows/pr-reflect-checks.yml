@@ -2,6 +2,8 @@
 # ------------------------------------
 # This workflow periodically runs a Python script that reflects the check status of
 # fanout pull requests (in sub-repositories) back onto the monorepo pull request.
+# Using polling mechanism for migration, as getting push events from all the
+# sub-repositories is not feasible.
 #
 # Key Features:
 # - Runs every 30 minutes using a cron schedule
@@ -50,13 +52,17 @@ jobs:
         id: find-prs
         run: |
           prs=$(gh pr list --state open --json number --jq '.[].number')
-          echo "prs=$prs" >> $GITHUB_OUTPUT
+          {
+            echo "prs<<EOF"
+            echo "$prs"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
         env:
           GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
 
       - name: Reflect checks for each open PR
         run: |
-          for pr in ${{ steps.find-prs.outputs.prs }}; do
+          echo "${{ steps.find-prs.outputs.prs }}" | while read -r pr; do
             echo "Running reflect-checks for PR #$pr"
             python .github/scripts/pr_reflect_checks.py \
                 --repo ${{ github.repository }} \
