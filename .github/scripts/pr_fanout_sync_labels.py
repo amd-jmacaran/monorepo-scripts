@@ -52,7 +52,7 @@ def sync_labels(client: GitHubCLIClient, monorepo: str, pr_number: str, entries:
         defined_labels = client.get_defined_labels(entry.url)
         applicable_labels = [label for label in source_labels if label in defined_labels]
         logger.debug(f"Applying labels to {entry.url}#{existing_pr}: {applicable_labels}")
-        client.sync_labels(monorepo, entry.url, applicable_labels, dry_run)
+        client.sync_labels(entry.url, existing_pr, applicable_labels, dry_run)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout label sync logic."""
