@@ -38,6 +38,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pydantic
 
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Compute Category Labels for PR
         id: compute_labels
         env:
