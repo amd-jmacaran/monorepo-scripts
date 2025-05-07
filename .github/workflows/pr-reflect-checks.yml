@@ -2,6 +2,8 @@
 # ------------------------------------
 # This workflow periodically runs a Python script that reflects the check status of
 # fanout pull requests (in sub-repositories) back onto the monorepo pull request.
+# Using polling mechanism for migration, as getting push events from all the
+# sub-repositories is not feasible.
 #
 # Key Features:
 # - Runs every 30 minutes using a cron schedule
