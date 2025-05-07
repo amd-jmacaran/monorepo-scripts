@@ -37,12 +37,12 @@ jobs:
           python -m pip install --upgrade pip
           pip install pydantic
 
-      - name: Compute Labels for PR
+      - name: Compute Category Labels for PR
         id: compute_labels
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          python .github/scripts/pr_auto_label.py \
+          python .github/scripts/pr_category_label.py \
             --repo ${{ github.repository }} \
             --pr ${{ github.event.pull_request.number }}
 
@@ -59,7 +59,7 @@ jobs:
 
       - name: Sync Custom Labels from Monorepo PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
         run: |
           python .github/scripts/pr_fanout_sync_labels.py \
             --repo ${{ github.repository }} \

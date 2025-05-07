@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 
 """
-PR Auto Label Script
+PR Category Label Script
 --------------------
 This script analyzes the file paths changed in a pull request and determines which
-labels should be added or removed based on the modified files.
+category labels should be added or removed based on the modified files.
 
 It uses GitHub's cli to fetch the changed files and the existing labels on the pull request.
 Then, it computes the desired labels based on file paths, compares them to the existing labels,
