@@ -57,15 +57,18 @@ class GitHubAPIClient:
 
     def get_pr_by_head_branch(self, repo_url: str, branch_name: str) -> dict | None:
         """Fetch the pull request associated with a specific head branch."""
-        head = f"{repo_url.split('/')[-1]}:{branch_name}"
-        url = f"{self.api_base}/repos/{repo_url}/pulls?head={head}&state=open"
+        url = f"{self.api_base}/repos/{repo_url}/pulls?head={branch_name}&state=open"
         prs = self._get_json(url, f"Failed to fetch PR by branch name in {repo_url}")
         return prs[0] if prs else None
 
     def get_pr_checks(self, repo_url: str, pr_number: int) -> list:
         """Fetch check runs associated with a pull request."""
-        url = f"{self.api_base}/repos/{repo_url}/pulls/{pr_number}/check-runs"
-        data = self._get_json(url, f"Failed to fetch PR checks in {repo_url}")
+        # the api has checks assigned to SHA, so map PR to a SHA first
+        pr_url = f"{self.api_base}/repos/{repo_url}/pulls/{pr_number}"
+        pr = self._get_json(pr_url, f"Failed to fetch PR #{pr_number} in {repo_url}")
+        sha = pr["head"]["sha"]
+        checks_url = f"{self.api_base}/repos/{repo_url}/commits/{sha}/check-runs"
+        data = self._get_json(checks_url, f"Failed to fetch check runs for commit {sha} in {repo_url}")
         return data.get("check_runs", [])
 
     def create_synthetic_check(self, repo_url: str, pr_number: int, check_name: str,
