@@ -53,7 +53,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     client = GitHubCLIClient()
     config = load_repo_config(args.config)
     for entry in config:
-        branch = f"monorepo-pr-{args.pr}-{entry.subtree}"
+        branch = f"monorepo-pr-{args.pr}-{entry.name}"
         pr = client.get_pr_by_head_branch(entry.repo, branch)
         if pr:
             number = pr["number"]
