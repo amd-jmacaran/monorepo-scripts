@@ -96,8 +96,18 @@ def main(argv: Optional[List[str]] = None) -> None:
         pr_exists: bool = client.pr_view(entry.url, branch)
         if not pr_exists:
             if not args.dry_run:
-                client.pr_create(entry.url, entry.branch, branch, pr_title, pr_body)
-                logger.info(f"Created PR in {entry.url} for branch {branch}")
+                # check if the branch already exists in the subrepo and error out if it did not
+                # means git subtree push failed
+                check_branch_subprocess = subprocess.run(
+                    ["git", "ls-remote", "--heads", subrepo_full_url, branch],
+                    stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                    check=True, text=True
+                )
+                if bool(check_branch_subprocess.stdout.strip()):
+                    client.pr_create(entry.url, entry.branch, branch, pr_title, pr_body)
+                    logger.info(f"Created PR in {entry.url} for branch {branch}")
+                else:
+                    logger.error(f"Branch {branch} does not exist in {entry.url}. Cannot create PR.")
 
 if __name__ == "__main__":
     main()
