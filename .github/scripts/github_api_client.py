@@ -93,7 +93,7 @@ class GitHubAPIClient:
         if existing:
             check_run_id = existing["id"]
             url = f"{self.api_base}/repos/{repo_url}/check-runs/{check_run_id}"
-            payload = self._check_run_payload(check_name, status, conclusion, summary)
+            payload = self._check_run_payload(check_name, status, details_url, conclusion, summary, existing["head_sha"])
             self._request_json("PATCH", url, payload, f"Failed to update check '{check_name}'")
             logger.info(f"Updated check '{check_name}' on PR #{pr_number} in {repo_url}")
         else:
