@@ -22,7 +22,7 @@ Example Usage:
 """
 
 import argparse
-import sys
+import shutil
 import subprocess
 import logging
 from typing import List, Optional
@@ -57,25 +57,20 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
 
 def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
     """Push the specified subtree to the sub-repo using `git subtree push`."""
-    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
+    # the output for git subtree push spits out thousands of lines for history preservation, suppress it
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch, "--quiet"]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
         # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
         # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
-        # bash_path = shutil.which("bash")
-        #if bash_path:
-        #    subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
-        #else:
-        def_recursion_limit = sys.getrecursionlimit()
-        min_recursion_limit = 10000
-        if (def_recursion_limit < min_recursion_limit):
-            logger.warning(f"Default recursion limit {def_recursion_limit} is less than minimum {min_recursion_limit}. Setting it to {min_recursion_limit}.")
-            sys.setrecursionlimit(min_recursion_limit)
-        subprocess.run(push_cmd, check=True)
-        if (def_recursion_limit < min_recursion_limit):
-            logger.warning(f"Resetting recursion limit to {def_recursion_limit}.")
-            sys.setrecursionlimit(def_recursion_limit)
+        bash_path = shutil.which("bash")
+        if bash_path:
+            ulimit_cmd = ["ulimit", "-s", "65532"]
+            combined_cmd = ulimit_cmd + "&&" + push_cmd
+            subprocess.run(combined_cmd, Shell=True, executable=bash_path, check=True)
+        else:
+            subprocess.run(push_cmd, check=True)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
