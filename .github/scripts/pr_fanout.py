@@ -67,7 +67,7 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         bash_path = shutil.which("bash")
         if bash_path:
             ulimit_cmd = ["ulimit", "-s", "65532"]
-            combined_cmd = ulimit_cmd + "&&" + push_cmd
+            combined_cmd = ulimit_cmd + ["&&"] + push_cmd
             subprocess.run(combined_cmd, Shell=True, executable=bash_path, check=True)
         else:
             subprocess.run(push_cmd, check=True)
@@ -89,7 +89,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         pr_title = f"[DO NOT MERGE] [Fanout] [Monorepo] PR #{args.pr} to {entry.name}"
         pr_body = (
             f"This is an automated PR for subtree `{entry.category}/{entry.name}` "
-            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr})."
+            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr}).\n\n"
             f"PLEASE DO NOT MERGE OR TOUCH THIS PR, AUTOMATED WORKFLOWS FROM THE MONOREPO ARE USING IT."
         )
         logger.debug(f"\nProcessing subtree: {entry.category}/{entry.name}")
