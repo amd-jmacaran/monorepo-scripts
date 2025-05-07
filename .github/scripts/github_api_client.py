@@ -26,6 +26,7 @@ class GitHubAPIClient:
 
     def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return JSON response."""
+        logger.debug(f"GET {url}")
         response = requests.get(url, headers=self.headers)
         if response.status_code != 200:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
@@ -57,7 +58,9 @@ class GitHubAPIClient:
 
     def get_pr_by_head_branch(self, repo_url: str, branch_name: str) -> dict | None:
         """Fetch the pull request associated with a specific head branch."""
-        url = f"{self.api_base}/repos/{repo_url}/pulls?head={branch_name}&state=open"
+        org = repo_url.split('/')[0]  # Extract the organization name from repo_url
+        full_head_ref = f"{org}:{branch_name}"
+        url = f"{self.api_base}/repos/{repo_url}/pulls?head={full_head_ref}&state=open"
         prs = self._get_json(url, f"Failed to fetch PR by branch name in {repo_url}")
         return prs[0] if prs else None
 
