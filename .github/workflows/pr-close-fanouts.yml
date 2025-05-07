@@ -33,4 +33,6 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           python .github/scripts/pr_close_fanouts.py \
-            --pr-number "${{ github.event.pull_request.number }}"
+            --repo "${{ github.repository }}" \
+            --pr "${{ github.event.pull_request.number }}" \
+            --config ".github/repos-config.json"
