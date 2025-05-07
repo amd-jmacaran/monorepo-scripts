@@ -4,8 +4,7 @@
 PR Fanout Script
 ------------------
 This script takes a list of changed subtrees and for each:
-    - Splits the corresponding subtree directory from the monorepo using `git subtree split`.
-    - Force pushes the split branch to the corresponding sub-repo.
+    - Pushes the corresponding subtree directory from the monorepo to the appropriate branch in the sub-repo using `git subtree push`.
     - Creates or updates a pull request in the sub-repo with a standardized branch and label.
 
 Arguments:
@@ -48,13 +47,9 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
     """Filter and return relevant subtree info from the config."""
     return [entry for entry in config if entry.name in subtrees]
 
-def split_and_push_subtree(entry: RepoEntry, branch: str, prefix: str, remote: str, dry_run: bool) -> None:
-    """Split the subtree and push it to the corresponding sub-repo."""
-    split_cmd = ["git", "subtree", "split", "--prefix", prefix, "-b", branch]
-    logger.debug(f"Running: {' '.join(split_cmd)}")
-    if not dry_run:
-        subprocess.run(split_cmd, check=True)
-    push_cmd = ["git", "push", remote, f"{branch}:refs/heads/{branch}", "--force"]
+def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
+    """Push the specified subtree to the sub-repo using `git subtree push`."""
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
         subprocess.run(push_cmd, check=True)
@@ -73,15 +68,15 @@ def main(argv: Optional[List[str]] = None) -> None:
     for entry in relevant_subtrees:
         branch = f"monorepo-pr-{args.pr}-{entry.name}"
         prefix = f"{entry.category}/{entry.name}"
-        remote = f"https://github.com/{entry.url}.git"
+        subrepo_full_url = f"https://github.com/{entry.url}.git"
         pr_title = f"[Fanout] Sync rocm-libraries PR #{args.pr} to {entry.name}"
         pr_body = f"This is an automated PR for subtree `{entry.name}` from monorepo PR #{args.pr}."
         logger.debug(f"\nProcessing subtree: {entry.name}")
         logger.debug(f"\tPrefix: {prefix}")
         logger.debug(f"\tBranch: {branch}")
-        logger.debug(f"\tRemote: {remote}")
+        logger.debug(f"\tRemote: {subrepo_full_url}")
         logger.debug(f"\tPR title: {pr_title}")
-        split_and_push_subtree(entry, branch, prefix, remote, args.dry_run)
+        subtree_push(entry, branch, prefix, subrepo_full_url, args.dry_run)
         pr_exists: bool = client.pr_view(entry.url, branch)
         if not pr_exists:
             if not args.dry_run:
