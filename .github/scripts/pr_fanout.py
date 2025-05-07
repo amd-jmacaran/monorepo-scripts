@@ -22,8 +22,8 @@ Example Usage:
 """
 
 import argparse
+import sys
 import subprocess
-import shutil
 import logging
 from typing import List, Optional
 from github_cli_client import GitHubCLIClient
@@ -62,11 +62,20 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
     if not dry_run:
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
         # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
-        bash_path = shutil.which("bash")
-        if bash_path:
-            subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
-        else:
-            subprocess.run(push_cmd, check=True)
+        # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
+        # bash_path = shutil.which("bash")
+        #if bash_path:
+        #    subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
+        #else:
+        def_recursion_limit = sys.getrecursionlimit()
+        min_recursion_limit = 10000
+        if (def_recursion_limit < min_recursion_limit):
+            logger.warning(f"Default recursion limit {def_recursion_limit} is less than minimum {min_recursion_limit}. Setting it to {min_recursion_limit}.")
+            sys.setrecursionlimit(min_recursion_limit)
+        subprocess.run(push_cmd, check=True)
+        if (def_recursion_limit < min_recursion_limit):
+            logger.warning(f"Resetting recursion limit to {def_recursion_limit}.")
+            sys.setrecursionlimit(def_recursion_limit)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
