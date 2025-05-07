@@ -30,7 +30,7 @@ jobs:
 
       - name: Close fanned out PRs and delete branches
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
         run: |
           python .github/scripts/pr_close_fanouts.py \
             --repo "${{ github.repository }}" \
