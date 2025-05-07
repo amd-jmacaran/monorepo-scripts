@@ -63,7 +63,21 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
         # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
         # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
-        subprocess.run(push_cmd, check=True)
+        try:
+            result = subprocess.run(
+                push_cmd,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            logging.debug(f"subtree push stdout:\n{result.stdout}")
+            logging.debug(f"subtree push stderr:\n{result.stderr}")
+        except subprocess.CalledProcessError as e:
+            logging.error(f"subtree push failed with exit code {e.returncode}")
+            logging.error(f"stdout:\n{e.stdout}")
+            logging.error(f"stderr:\n{e.stderr}")
+            raise RuntimeError("git subtree push failed — see logs for details.") from e
+        # subprocess.run(push_cmd, check=True)
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
