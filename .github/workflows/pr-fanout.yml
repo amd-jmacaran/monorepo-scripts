@@ -41,6 +41,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pydantic requests
 
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Detect changed subtrees
         id: detect
         env:
