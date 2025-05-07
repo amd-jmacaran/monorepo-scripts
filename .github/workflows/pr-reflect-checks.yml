@@ -50,7 +50,7 @@ jobs:
           prs=$(gh pr list --state open --json number --jq '.[].number')
           echo "prs=$prs" >> $GITHUB_OUTPUT
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
 
       - name: Reflect checks for each open PR
         run: |
@@ -62,4 +62,4 @@ jobs:
                 --config ".github/repos-config.json"
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
