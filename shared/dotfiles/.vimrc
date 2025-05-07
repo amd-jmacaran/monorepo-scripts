@@ -3,7 +3,7 @@ set background=dark
 colorscheme solarized
 let g:solarized_termtrans=1
 
-" Make Vim more useful
+" Make Vim more useful and user-friendly
 set nocompatible
 " Use the OS clipboard by default (on versions compiled with `+clipboard`)
 set clipboard=unnamed
