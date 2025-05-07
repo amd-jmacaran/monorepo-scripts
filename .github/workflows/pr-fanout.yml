@@ -71,7 +71,7 @@ jobs:
 
       - name: Reflect Checks to Monorepo PR
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
         run: |
           python .github/scripts/pr_reflect_checks.py \
             --repo ${{ github.repository }} \
