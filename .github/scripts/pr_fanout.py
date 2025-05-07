@@ -58,7 +58,7 @@ def get_subtree_info(config: List[RepoEntry], subtrees: List[str]) -> List[RepoE
 def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: str, dry_run: bool) -> None:
     """Push the specified subtree to the sub-repo using `git subtree push`."""
     # the output for git subtree push spits out thousands of lines for history preservation, suppress it
-    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch, "--quiet"]
+    push_cmd = ["git", "subtree", "push", "--prefix", prefix, subrepo_full_url, branch]
     logger.debug(f"Running: {' '.join(push_cmd)}")
     if not dry_run:
         # explicitly set the shell to bash if possible to avoid issue linked, which was hit in testing
@@ -89,7 +89,7 @@ def main(argv: Optional[List[str]] = None) -> None:
         pr_title = f"[DO NOT MERGE] [Fanout] [Monorepo] PR #{args.pr} to {entry.name}"
         pr_body = (
             f"This is an automated PR for subtree `{entry.category}/{entry.name}` "
-            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr}).\n\n"
+            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr}). "
             f"PLEASE DO NOT MERGE OR TOUCH THIS PR, AUTOMATED WORKFLOWS FROM THE MONOREPO ARE USING IT."
         )
         logger.debug(f"\nProcessing subtree: {entry.category}/{entry.name}")
