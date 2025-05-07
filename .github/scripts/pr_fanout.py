@@ -66,7 +66,7 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         # we also need to increase python's recursion limit to avoid hitting the recursion limit in the subprocess
         bash_path = shutil.which("bash")
         if bash_path:
-            ulimit_cmd = ["ulimit", "-s", "65532"]
+            ulimit_cmd = [bash_path,"-c","ulimit", "-s", "65532"]
             combined_cmd = ulimit_cmd + ["&&"] + push_cmd
             subprocess.run(combined_cmd, check=True)
         else:
@@ -80,6 +80,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     client = GitHubCLIClient()
     config = load_repo_config(args.config)
+    # Key in on intersection between the subtrees input argument (new-line delimited) and the config file contents
     subtrees = [line.strip() for line in args.subtrees.splitlines() if line.strip()]
     relevant_subtrees = get_subtree_info(config, subtrees)
     for entry in relevant_subtrees:
