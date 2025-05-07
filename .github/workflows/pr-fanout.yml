@@ -20,6 +20,11 @@ on:
         - synchronize
         - reopened
 
+concurrency:
+  group: pr-fanout-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+  # ensure that the workflow is not running for the same PR multiple times at once
+
 jobs:
   fanout:
     runs-on: ubuntu-latest

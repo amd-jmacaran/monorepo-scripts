@@ -28,6 +28,11 @@ on:
     - cron: "*/30 * * * *"  # every 10 minutes
   workflow_dispatch:        # allow manual triggering
 
+concurrency:
+  group: pr-reflect-checks
+  cancel-in-progress: false
+  # ensure that the workflow is only running once at a time
+
 jobs:
   reflect-checks:
     runs-on: ubuntu-latest
