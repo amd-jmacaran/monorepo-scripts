@@ -20,13 +20,12 @@ import json
 import logging
 from typing import List, Optional
 
-logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 class GitHubCLIClient:
     """Client for interacting with GitHub via the `gh` CLI."""
 
-    def __init__(self):
+    def __init__(self, debug=False):
         if not self._gh_available():
             raise EnvironmentError("GitHub CLI (`gh`) is not installed or not in PATH.")
 
@@ -62,7 +61,12 @@ class GitHubCLIClient:
         logger.debug(f"Changed files in PR #{pr}: {files}")
         return files
 
-    def get_existing_labels(self, repo: str, pr: int) -> List[str]:
+    def get_defined_labels(self, repo: str) -> List[str]:
+        """Get all labels defined in the given repository."""
+        result = self._run_gh_command(["label", "list", "--repo", repo, "--json", "name"])
+        return [label["name"] for label in json.loads(result.stdout)]
+
+    def get_existing_labels_on_pr(self, repo: str, pr: int) -> List[str]:
         """Fetch current labels on a PR."""
         result = self._run_gh_command(
             ["pr", "view", str(pr), "--repo", repo, "--json", "labels"]
@@ -111,17 +115,21 @@ class GitHubCLIClient:
 
     def sync_labels(self, source_repo: str, target_repo: str, labels: List[str], dry_run: Optional[bool] = False) -> None:
         """Sync labels from the source repo to the target repo (only apply existing labels)."""
+        logger.debug(f"Syncing labels from {source_repo} to {target_repo}.")
         result = self._run_gh_command(
-            ["label", "list", "--repo", source_repo]
+            ["label", "list", "--repo", source_repo, "--json", "name"]
         )
         source_repo_labels = {label["name"] for label in json.loads(result.stdout)}
         result = self._run_gh_command(
-            ["label", "list", "--repo", target_repo]
+            ["label", "list", "--repo", target_repo, "--json", "name"]
         )
         target_repo_labels = {label["name"] for label in json.loads(result.stdout)}
         labels_set = set(labels)
-        labels_to_apply = labels_set & source_repo_labels & target_repo_labels
-        # Apply labels that exist in both source and target repos
+        logger.debug(f"Source repo labels: {source_repo_labels}")
+        logger.debug(f"Target repo labels: {target_repo_labels}")
+        logger.debug(f"Labels to sync: {labels_set}")
+        labels_to_apply = labels_set & target_repo_labels
+        # Apply labels that exist in both source PR and target repos
         # Wrap in quotes if label contains spaces
         labels_arg = ",".join(f'"{label}"' if " " in label else label for label in labels_to_apply)
         cmd = [
