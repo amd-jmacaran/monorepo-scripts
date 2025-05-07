@@ -16,6 +16,7 @@ It uses a consistent naming convention for identifying branches: monorepo-pr-<nu
 Arguments:
     --repo      : Full repository name (e.g., org/repo)
     --pr        : Pull request number
+    --config    : OPTIONAL, path to the repos-config.json file
     --dry-run   : If set, will only log actions without making changes.
     --debug     : If set, enables detailed debug logging.
 
@@ -38,6 +39,7 @@ def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Close fanned-out PRs and delete associated branches.")
     parser.add_argument("--repo", required=True, help="Full repository name (e.g., org/repo)")
     parser.add_argument("--pr", required=True, type=int, help="Pull request number")
+    parser.add_argument("--config", required=False, default=".github/repos-config.json", help="Path to the repos-config.json file")
     parser.add_argument("--dry-run", action="store_true", help="Print results without writing to GITHUB_OUTPUT.")
     parser.add_argument("--debug", action="store_true", help="Enable debug logging")
     return parser.parse_args(argv)
