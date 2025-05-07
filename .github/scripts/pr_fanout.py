@@ -75,8 +75,12 @@ def main(argv: Optional[List[str]] = None) -> None:
         branch = f"monorepo-pr-{args.pr}-{entry.name}"
         prefix = f"{entry.category}/{entry.name}"
         subrepo_full_url = f"https://github.com/{entry.url}.git"
-        pr_title = f"[Fanout] Sync {args.repo} PR #{args.pr} to {entry.name}"
-        pr_body = f"This is an automated PR for subtree `{entry.category}/{entry.name}` from monorepo PR #{args.pr}."
+        pr_title = f"[DO NOT MERGE] [Fanout] [Monorepo] PR #{args.pr} to {entry.name}"
+        pr_body = (
+            f"This is an automated PR for subtree `{entry.category}/{entry.name}` "
+            f"originating from monorepo PR [#{args.pr}](https://github.com/{args.repo}/pull/{args.pr})."
+            f"PLEASE DO NOT MERGE OR TOUCH THIS PR, AUTOMATED WORKFLOWS FROM THE MONOREPO ARE USING IT."
+        )
         logger.debug(f"\nProcessing subtree: {entry.category}/{entry.name}")
         logger.debug(f"\tPrefix: {prefix}")
         logger.debug(f"\tBranch: {branch}")
