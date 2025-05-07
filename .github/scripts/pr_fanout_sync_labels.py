@@ -5,7 +5,8 @@ PR Fanout Sync Label Script
 ---------------------------
 This script reads labels from a monorepo pull request and ensures they exist
 on all related fanned-out pull requests, skipping any label that does not
-already exist in the sub-repos.
+already exist in the sub-repos. This algorithm does not involve removing labels.
+Further discussion with component teams required for label removal.
 
 Arguments:
     --repo      : Full repository name (e.g., org/repo)
