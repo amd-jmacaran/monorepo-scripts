@@ -64,7 +64,7 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
         # https://stackoverflow.com/questions/69493528/git-subtree-maximum-function-recursion-depth
         bash_path = shutil.which("bash")
         if bash_path:
-            subprocess.run(push_cmd, shell=True, executable=bash_path, check=True)
+            subprocess.run([bash_path, "-c", " ".join(push_cmd)], check=True)
         else:
             subprocess.run(push_cmd, check=True)
 
