@@ -20,6 +20,11 @@ on:
         - synchronize
         - reopened
 
+concurrency:
+  group: pr-fanout-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+  # ensure that the workflow is not running for the same PR multiple times at once
+
 jobs:
   fanout:
     runs-on: ubuntu-latest
@@ -41,6 +46,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install pydantic requests
 
+      - name: Set up Git user
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Detect changed subtrees
         id: detect
         env:
@@ -49,7 +59,8 @@ jobs:
           python .github/scripts/pr_detect_changed_subtrees.py \
             --repo "${{ github.repository }}" \
             --pr "${{ github.event.pull_request.number }}" \
-            --config ".github/repos-config.json"
+            --config ".github/repos-config.json" \
+            --debug
 
       - name: Checkout full repo with changed subtrees
         if: steps.detect.outputs.subtrees
@@ -70,12 +81,3 @@ jobs:
             --repo "${{ github.repository }}" \
             --pr "${{ github.event.pull_request.number }}" \
             --subtrees "${{ steps.detect.outputs.subtrees }}"
-
-      - name: Reflect Checks to Monorepo PR
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          python .github/scripts/pr_reflect_checks.py \
-            --repo ${{ github.repository }} \
-            --pr "${{ github.event.pull_request.number }}" \
-            --config ".github/repos-config.json"
