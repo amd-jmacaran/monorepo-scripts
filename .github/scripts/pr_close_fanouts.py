@@ -54,7 +54,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     config = load_repo_config(args.config)
     for entry in config:
         branch = f"monorepo-pr-{args.pr}-{entry.name}"
-        pr = client.get_pr_by_head_branch(entry.repo, branch)
+        pr = client.get_pr_by_head_branch(entry.url, branch)
         if pr:
             number = pr["number"]
             client.close_pr_and_delete_branch(entry.repo, number)
