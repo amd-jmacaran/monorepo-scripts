@@ -53,7 +53,7 @@ jobs:
 
       - name: Reflect Checks
         run: |
-          python .github/scripts/pr-reflect-checks.py \
+          python .github/scripts/pr_reflect_checks.py \
             --repo ROCm/rocm-libraries \
             --pr ${{ github.event.pull_request.number || github.event.inputs.pr }}
         env:
