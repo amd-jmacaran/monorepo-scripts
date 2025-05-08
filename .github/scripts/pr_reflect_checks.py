@@ -51,18 +51,24 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     client = GitHubAPIClient()
     config = load_repo_config(args.config)
+    pr_sha = client.get_commit_sha(args.repo, args.pr)
+    if not pr_sha:
+        logger.error(f"Failed to fetch commit SHA for PR #{args.pr} in {args.repo}")
+        return
+    logger.info(f"Fetched commit SHA for PR #{args.pr}: {pr_sha}")
     monorepo_checks = {
         check["name"]: check
-        for check in client.get_pr_checks(args.repo, args.pr)
+        for check in client.get_check_runs_for_commit(args.repo, pr_sha)
     }
     for entry in config:
         subrepo = entry.url
-        branch = FanoutNaming.get_fanout_branch_name(args.pr, entry.name)
+        branch = FanoutNaming.compute_branch_name(args.pr, entry.name)
         pr = client.get_pr_by_head_branch(subrepo, branch)
         if not pr:
             logger.info(f"No open PR found in {subrepo} for branch {branch}")
             continue
-        checks = client.get_pr_checks(subrepo, pr["number"])
+        subrepo_pr_sha = client.get_commit_sha(subrepo, pr)
+        checks = client.get_check_runs_for_commit(subrepo, subrepo_pr_sha)
         for check in checks:
             synthetic_name = f"{entry.name}: {check['name']}"
             status = check["status"]
