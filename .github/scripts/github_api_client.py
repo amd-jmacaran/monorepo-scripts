@@ -88,7 +88,7 @@ class GitHubAPIClient:
 
     def get_check_run_by_name(self, repo: str, sha: str, name: str):
         """Return the check run with a given name for a specific commit SHA, if it exists."""
-        check_runs = self.get_check_runs_for_commit(repo, sha)
+        check_runs = self.get_check_runs_for_ref(repo, sha)
         for check in check_runs:
             if check["name"] == name:
                 return check
