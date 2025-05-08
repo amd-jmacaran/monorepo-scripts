@@ -1,0 +1,42 @@
+name: Reflect Subrepo Checks (Push)
+
+on:
+  repository_dispatch:
+    types: [reflect-checks]
+
+jobs:
+  reflect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout monorepo
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install -r .github/scripts/requirements.txt
+
+      - name: Reflect Checks
+        run: |
+          python .github/scripts/pr-reflect-checks.py \
+            --repo ROCm/rocm-libraries \
+            --pr ${{ github.event.client_payload.pr }}
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+#
+# Each subrepo can include this step after running CI:
+#
+#- name: Notify Monorepo
+#  if: github.event_name == 'pull_request'
+#  run: |
+#    curl -X POST https://api.github.com/repos/ROCm/rocm-libraries/dispatches \
+#      -H "Authorization: token ${{ secrets.MONOREPO_DISPATCH_TOKEN }}" \
+#      -H "Accept: application/vnd.github+json" \
+#      -d '{"event_type": "reflect-checks", "client_payload": {"pr": <monorepo_pr_number>}}'
+#
+# Replace <monorepo_pr_number> with the appropriate number. You can inject it dynamically if you tag PRs or store mappings in labels/comments.
+#

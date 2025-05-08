@@ -25,9 +25,11 @@ Example Usage:
 import argparse
 import logging
 from typing import List, Optional
+
 from github_api_client import GitHubAPIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
+from utils_fanout_naming import FanoutNaming
 
 logger = logging.getLogger(__name__)
 
@@ -41,28 +43,6 @@ def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true", help="If set, enables detailed debug logging.")
     return parser.parse_args(argv)
 
-def reflect_checks(client: GitHubAPIClient, monorepo: str, pr_number: int, config: List[RepoEntry], dry_run: bool) -> None:
-    """Reflect checks from fanned-out PRs to the monorepo PR."""
-    for entry in config:
-        repo = entry.url
-        branch = f"monorepo-pr-{pr_number}-{entry.name}"
-        logger.debug(f"Looking up PR in {repo} with branch {branch}")
-        pr = client.get_pr_by_head_branch(repo, branch)
-        if not pr:
-            logger.info(f"No open PR found in {repo} for branch {branch}")
-            continue
-        checks = client.get_pr_checks(repo, pr["number"])
-        for check in checks:
-            check_name = f"{entry.name}: {check['name']}"
-            status = check["status"]
-            details_url = check["details_url"]
-            conclusion = check["conclusion"] or "neutral"
-            summary = check.get("output", {}).get("summary", "")
-            logger.info(f"[{check_name}] Status: {status} | Conclusion: {conclusion}")
-            logger.info(f"[{check_name}] URL: {details_url}")
-            if not dry_run:
-                client.upsert_check_run(monorepo, check_name, pr_number, status, details_url, conclusion, summary)
-
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR checks reflection logic."""
     args = parse_arguments(argv)
@@ -71,7 +51,40 @@ def main(argv: Optional[List[str]] = None) -> None:
     )
     client = GitHubAPIClient()
     config = load_repo_config(args.config)
-    reflect_checks(client, args.repo, int(args.pr), config, args.dry_run)
+    monorepo_checks = {
+        check["name"]: check
+        for check in client.get_pr_checks(args.repo, args.pr)
+    }
+    for entry in config:
+        subrepo = entry.url
+        branch = FanoutNaming.get_fanout_branch_name(args.pr, entry.name)
+        pr = client.get_pr_by_head_branch(subrepo, branch)
+        if not pr:
+            logger.info(f"No open PR found in {subrepo} for branch {branch}")
+            continue
+        checks = client.get_pr_checks(subrepo, pr["number"])
+        for check in checks:
+            synthetic_name = f"{entry.name}: {check['name']}"
+            status = check["status"]
+            conclusion = check.get("conclusion", "neutral")
+            details_url = check.get("details_url", "")
+            summary = check.get("output", {}).get("summary", "")
+            existing = monorepo_checks.get(synthetic_name)
+            needs_update = (
+                not existing or
+                existing["status"] != status or
+                existing.get("conclusion") != conclusion or
+                existing.get("output", {}).get("summary") != summary
+            )
+            if not needs_update:
+                logger.debug(f"Skipped unchanged check: {synthetic_name}")
+                continue
+            logger.info(f"Reflecting check: {synthetic_name}")
+            if not args.dry_run:
+                client.upsert_check_run(
+                    args.repo, synthetic_name, args.pr,
+                    status, details_url, conclusion, summary
+                )
 
 if __name__ == "__main__":
     main()

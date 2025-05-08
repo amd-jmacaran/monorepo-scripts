@@ -21,22 +21,16 @@
 #   python scripts/reflect/pr-reflect-checks.py --repo ROCm/rocm-libraries --pr 123
 
 
-name: Reflect Fanout Checks
+name: Reflect Subrepo Checks (Polling)
 
 on:
   schedule:
-    - cron: "*/30 * * * *"  # every 10 minutes
-  workflow_dispatch:        # allow manual triggering
-
-concurrency:
-  group: pr-reflect-checks
-  cancel-in-progress: false
-  # ensure that the workflow is only running once at a time
+    - cron: '*/10 * * * *'  # every 10 minutes
+  workflow_dispatch:
 
 jobs:
-  reflect-checks:
+  reflect:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout code
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
@@ -56,26 +50,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Find open PRs
-        id: find-prs
-        run: |
-          prs=$(gh pr list --state open --json number --jq '.[].number')
-          {
-            echo "prs<<EOF"
-            echo "$prs"
-            echo "EOF"
-          } >> "$GITHUB_OUTPUT"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Reflect checks for each open PR
+      - name: Reflect Checks
         run: |
-          echo "${{ steps.find-prs.outputs.prs }}" | while read -r pr; do
-            echo "Running reflect-checks for PR #$pr"
-            python .github/scripts/pr_reflect_checks.py \
-                --repo ${{ github.repository }} \
-                --pr "$pr" \
-                --config ".github/repos-config.json"
-          done
+          python .github/scripts/pr-reflect-checks.py \
+            --repo ROCm/rocm-libraries \
+            --pr ${{ github.event.pull_request.number || github.event.inputs.pr }}
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
