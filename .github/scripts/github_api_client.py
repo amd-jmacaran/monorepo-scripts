@@ -68,6 +68,12 @@ class GitHubAPIClient:
             }
         }
 
+    def get_head_sha_for_pr(self, repo: str, pr_number: int) -> Optional[str]:
+        """Fetch the head SHA for a given pull request number in a repository."""
+        url = f"{self.api_url}/repos/{repo}/pulls/{pr_number}"
+        data = self._get_json(url, f"Failed to fetch PR #{pr_number} in {repo}")
+        return data.get("head", {}).get("sha")
+
     def get_branch_name_for_pr(self, repo: str, pr_number: int) -> Optional[str]:
         """Fetch the head branch name for a given pull request number in a repository."""
         url = f"{self.api_url}/repos/{repo}/pulls/{pr_number}"
