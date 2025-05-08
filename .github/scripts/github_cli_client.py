@@ -23,9 +23,8 @@ from typing import List, Optional
 logger = logging.getLogger(__name__)
 
 class GitHubCLIClient:
-    """Client for interacting with GitHub via the `gh` CLI."""
-
-    def __init__(self, debug=False):
+    def __init__(self) -> None:
+        """Initialize the GitHub CLI client."""
         if not self._gh_available():
             raise EnvironmentError("GitHub CLI (`gh`) is not installed or not in PATH.")
 
