@@ -11,12 +11,6 @@
       "url": "amd-jmacaran/cli",
       "branch": "master",
       "category": "projects"
-    },
-    {
-      "name": "dotfiles",
-      "url": "amd-jmacaran/dotfiles",
-      "branch": "main",
-      "category": "shared"
     }
   ]
 }
