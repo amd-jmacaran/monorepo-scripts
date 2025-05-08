@@ -52,6 +52,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     client = GitHubAPIClient()
     config = load_repo_config(args.config)
     monorepo_branch = client.get_branch_name_for_pr(args.repo, args.pr)
+    monorepo_pr_sha = client.get_head_sha_for_pr(args.repo, args.pr)
     monorepo_checks = {
         check["name"]: check
         for check in client.get_check_runs_for_ref(args.repo, monorepo_branch)
@@ -83,7 +84,7 @@ def main(argv: Optional[List[str]] = None) -> None:
             logger.info(f"Reflecting check: {synthetic_name}")
             if not args.dry_run:
                 client.upsert_check_run(
-                    args.repo, synthetic_name, args.pr,
+                    args.repo, synthetic_name, monorepo_pr_sha,
                     status, details_url, conclusion, summary
                 )
 
