@@ -68,16 +68,16 @@ class GitHubAPIClient:
             }
         }
 
-    def get_commit_sha(self, repo: str, pr_number: int) -> Optional[str]:
-        """Fetch the commit SHA for a given PR number in a repository."""
+    def get_branch_name_for_pr(self, repo: str, pr_number: int) -> Optional[str]:
+        """Fetch the head branch name for a given pull request number in a repository."""
         url = f"{self.api_url}/repos/{repo}/pulls/{pr_number}"
         data = self._get_json(url, f"Failed to fetch PR #{pr_number} in {repo}")
-        return data.get("head", {}).get("sha")
+        return data.get("head", {}).get("ref")
 
-    def get_check_runs_for_commit(self, repo: str, sha: str) -> list:
-        """Fetch check runs for a specific commit SHA in a repository."""
-        url = f"{self.api_url}/repos/{repo}/commits/{sha}/check-runs"
-        data = self._get_json(url, f"Failed to get check runs for {repo}@{sha}")
+    def get_check_runs_for_ref(self, repo: str, ref: str) -> list:
+        """Fetch check runs for a specific reference in a repository."""
+        url = f"{self.api_url}/repos/{repo}/commits/{ref}/check-runs"
+        data = self._get_json(url, f"Failed to get check runs for {repo}@{ref}")
         return data.get("check_runs", [])
 
     def get_pr_by_head_branch(self, repo: str, head_branch: str) -> Optional[dict]:
