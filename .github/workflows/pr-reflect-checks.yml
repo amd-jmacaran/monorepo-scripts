@@ -62,4 +62,5 @@ jobs:
             python .github/scripts/pr_reflect_checks.py --repo "${{ github.repository }}" --pr "${pr}" --debug
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}

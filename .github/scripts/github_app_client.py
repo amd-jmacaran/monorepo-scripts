@@ -29,7 +29,7 @@ class GitHubAppClient:
     def __init__(self) -> None:
         """Initialize the GitHub App client for authentication."""
         # Check if the required environment variables are set
-        app_id = int(os.environ.get("APP_ID"))
+        app_id = os.environ.get("APP_ID")
         private_key = os.environ.get("APP_PRIVATE_KEY")
         if not private_key or not app_id:
             raise RuntimeError("Environment variables missing for GitHub App usage.")
