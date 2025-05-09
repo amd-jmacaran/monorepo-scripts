@@ -41,7 +41,7 @@ jobs:
         with:
           sparse-checkout: .github
           sparse-checkout-cone-mode: true
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ secrets.MONOREPO_BOT_TOKEN }}
 
       - name: Set up Python
         uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
@@ -55,10 +55,8 @@ jobs:
 
       - name: Set up Git user
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global credential.helper store
-          echo "https://${{ steps.generate-token.outputs.token }}:@github.com" > ~/.git-credentials
+          git config user.name assistant-librarian[bot]"
+          git config user.email "assistant-librarian[bot]@users.noreply.github.com"
 
       - name: Detect changed subtrees
         id: detect
@@ -81,7 +79,7 @@ jobs:
             .github
             ${{ steps.detect.outputs.subtrees }}
           fetch-depth: 0  # Needed for subtree splitting
-          token: ${{ steps.generate-token.outputs.token }}
+          token: ${{ secrets.MONOREPO_BOT_TOKEN }}
 
       - name: Fan out child PRs
         if: steps.detect.outputs.subtrees
