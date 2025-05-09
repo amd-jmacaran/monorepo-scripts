@@ -43,7 +43,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pydantic requests
+          pip install cryptography PyJWT pydantic requests
 
       - name: Set up Git user
         run: |
@@ -62,4 +62,6 @@ jobs:
             python .github/scripts/pr_reflect_checks.py --repo "${{ github.repository }}" --pr "${pr}" --debug
           done
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}

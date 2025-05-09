@@ -42,7 +42,7 @@ jobs:
       - name: Install python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install pydantic
+          pip install cryptography PyJWT pydantic requests
 
       - name: Set up Git user
         run: |
