@@ -16,25 +16,25 @@ Requires:
 Author: Your Name
 """
 
-import os
 import requests
 import logging
 from typing import Optional
+from time import time
+from github_app_client import GitHubAppClient
 
 logger = logging.getLogger(__name__)
 
 class GitHubAPIClient:
+
     def __init__(self) -> None:
-        """Initialize the GitHub API client with a personal access token."""
-        self.token = os.environ.get("GH_TOKEN")
-        if not self.token:
-            raise RuntimeError("GitHub token must be provided via GH_TOKEN env variable.")
+        """Initialize the GitHub API client using GitHub App authentication."""
+        self.api_url = "https://api.github.com"
         self.session = requests.Session()
+        github_app_client = GitHubAppClient()
         self.session.headers.update({
-            "Authorization": f"Bearer {self.token}",
+            "Authorization": f"Bearer {github_app_client.token}",
             "Accept": "application/vnd.github+json",
         })
-        self.api_url = "https://api.github.com"
 
     def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return JSON response."""
@@ -52,18 +52,19 @@ class GitHubAPIClient:
             return {}
         return response.json()
 
-    def _generate_check_run_payload(self, name: str, status: str, details_url: str,
-                                    conclusion: str, summary: str) -> dict:
+    def _generate_check_run_payload(self, name: str, head_sha: str, status: str,
+                                    details_url: str, conclusion: str, completed_at: str,
+                                    title: str, summary: str) -> dict:
         """Create the payload for a check run with potentially empty fields safely coerced to strings."""
         return {
             "name": name,
-            "head_sha": None,  # to be filled in `upsert_check_run`
+            "head_sha": head_sha,
             "status": status,
-            "external_id": None,
             "details_url": details_url,
-            "conclusion": conclusion if status == "completed" else None,
+            "conclusion": conclusion if status == "completed" else "",
+            "completed_at": completed_at if status == "completed" else "",
             "output": {
-                "title": name,
+                "title": title or name,
                 "summary": summary or "",
             }
         }
@@ -92,7 +93,7 @@ class GitHubAPIClient:
         data = self._get_json(url, f"Failed to get PRs for {repo} with head {head_branch}")
         return data[0] if data else None
 
-    def get_check_run_by_name(self, repo: str, sha: str, name: str):
+    def get_check_run_by_name(self, repo: str, sha: str, name: str) -> Optional[dict]:
         """Return the check run with a given name for a specific commit SHA, if it exists."""
         check_runs = self.get_check_runs_for_ref(repo, sha)
         for check in check_runs:
@@ -101,11 +102,13 @@ class GitHubAPIClient:
         return None
 
     def upsert_check_run(self, repo: str, name: str, sha: str, status: str,
-                         details_url: str, conclusion: str, summary: str):
+                         details_url: str, conclusion: str, completed_at: str,
+                         title: str, summary: str) -> dict:
         """Create or update a check run for a specific commit SHA."""
         existing = self.get_check_run_by_name(repo, sha, name)
-        payload = self._generate_check_run_payload(name, status, details_url, conclusion, summary)
-        payload["head_sha"] = sha
+        payload = self._generate_check_run_payload(name, sha, status, details_url,
+                                                   conclusion, completed_at, title, summary)
+        logger.debug(f"Check run payload: {payload}")
         if existing:
             check_id = existing["id"]
             url = f"{self.api_url}/repos/{repo}/check-runs/{check_id}"
