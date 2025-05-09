@@ -19,6 +19,7 @@ Author: Your Name
 
 import requests
 import logging
+import re
 from time import time
 from typing import Optional, List
 from github_app_client import GitHubAppClient
@@ -33,13 +34,43 @@ class GitHubAPIClient:
         self.session = requests.Session()
         self.github_app_client = GitHubAppClient()
 
+    def _get_total_pages(self, response) -> int:
+        """Extract the total number of pages from the response's Link header."""
+        try:
+            # Get the total page count from the 'Link' header if available
+            if 'link' in response.headers:
+                link_header = response.headers['link']
+                # Example: <https://api.github.com/repositories/12345678/issues?page=2>; rel="next", <https://api.github.com/repositories/12345678/issues?page=5>; rel="last"
+                match = re.search(r'page=(\d+)\s*>; rel="last"', link_header)
+                if match:
+                    return int(match.group(1))  # Return the total number of pages
+        except Exception as e:
+            logger.error(f"Failed to extract total pages: {e}")
+        return 1  # Default to 1 page if no pagination info is found
+
     def _get_json(self, url: str, error_msg: str) -> dict:
-        """Helper method to perform a GET request and return JSON response."""
-        response = self.session.get(url, headers=self.github_app_client.get_authenticated_headers())
+        """Helper method to perform a GET request and return the JSON response, handling pagination."""
+        page = 1
+        per_page = 100
+        all_results = []
+        # First request to determine the number of pages
+        response = self.session.get(f"{url}?page={page}&per_page={per_page}", headers=self.github_app_client.get_authenticated_headers())
         if not response.ok:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
             return {}
-        return response.json()
+        data = response.json()
+        all_results.extend(data)
+        # Check pagination headers to determine if more pages exist
+        total_pages = self._get_total_pages(response)  # Implement this function to get the total number of pages from headers
+        # If more than 1 page, iterate over the remaining pages
+        for page in range(2, total_pages + 1):
+            response = self.session.get(f"{url}?page={page}&per_page={per_page}", headers=self.github_app_client.get_authenticated_headers())
+            if not response.ok:
+                logger.error(f"{error_msg}: {response.status_code} {response.text}")
+                break
+            data = response.json()
+            all_results.extend(data)
+        return all_results
 
     def _request_json(self, method: str, url: str, json: dict, error_msg: str) -> dict:
         """Helper method to perform a request and return JSON response with dry-run option."""
