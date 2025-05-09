@@ -34,13 +34,14 @@ class GitHubAppClient:
         if not private_key or not app_id:
             raise RuntimeError("Environment variables missing for GitHub App usage.")
         self.token = self._generate_jwt()
-        self.installation_id = self._get_installation_id()  # Get installation ID dynamically
+        self.installation_id = self._get_installation_id()
+        logger.debug(f"GitHub App Client initialized with installation ID: {self.installation_id}")
 
     def _generate_jwt(self) -> str:
         """Generate a JWT for authenticating as the GitHub App."""
         payload = {
             "iat": int(time()),
-            "exp": int(time()) + 60 * 10,  # 10-minute expiration time
+            "exp": int(time()) + 60 * 10,
             "iss": (os.environ.get("APP_ID"))
         }
         encoded_jwt = jwt.encode(payload, os.environ.get("APP_PRIVATE_KEY"), algorithm="RS256")
