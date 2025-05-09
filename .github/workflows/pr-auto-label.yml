@@ -72,7 +72,9 @@ jobs:
       - name: Compute Category Labels for PR
         id: compute_labels
         env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_category_label.py \
             --repo ${{ github.repository }} \
@@ -91,7 +93,9 @@ jobs:
 
       - name: Sync Custom Labels from Monorepo PR
         env:
-          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_fanout_sync_labels.py \
             --repo ${{ github.repository }} \
