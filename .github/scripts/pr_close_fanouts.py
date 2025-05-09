@@ -28,8 +28,7 @@ Example Usage:
 import argparse
 import logging
 from typing import Optional, List
-from github_cli_client import GitHubCLIClient
-from repo_config_model import RepoEntry
+from github_api_client import GitHubAPIClient
 from config_loader import load_repo_config
 
 logger = logging.getLogger(__name__)
@@ -50,7 +49,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     config = load_repo_config(args.config)
     for entry in config:
         branch = f"monorepo-pr-{args.pr}-{entry.name}"

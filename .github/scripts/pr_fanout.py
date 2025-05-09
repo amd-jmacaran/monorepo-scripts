@@ -22,11 +22,10 @@ Example Usage:
 """
 
 import argparse
-import shutil
 import subprocess
 import logging
 from typing import List, Optional
-from github_cli_client import GitHubCLIClient
+from github_api_client import GitHubAPIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 
@@ -86,7 +85,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     config = load_repo_config(args.config)
     # Key in on intersection between the subtrees input argument (new-line delimited) and the config file contents
     subtrees = [line.strip() for line in args.subtrees.splitlines() if line.strip()]

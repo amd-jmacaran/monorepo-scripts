@@ -23,7 +23,7 @@ Example Usage:
 import argparse
 import logging
 from typing import List, Optional
-from github_cli_client import GitHubCLIClient
+from github_api_client import GitHubAPIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 
@@ -39,7 +39,7 @@ def parse_arguments(argv: Optional[List[str]] = None) -> argparse.Namespace:
     parser.add_argument("--debug", action="store_true", help="If set, enables detailed debug logging.")
     return parser.parse_args(argv)
 
-def sync_labels(client: GitHubCLIClient, monorepo: str, pr_number: str, entries: List[RepoEntry], dry_run: bool) -> None:
+def sync_labels(client: GitHubAPIClient, monorepo: str, pr_number: str, entries: List[RepoEntry], dry_run: bool) -> None:
     """Sync labels from the monorepo PR to the fanned-out PRs."""
     source_labels = client.get_existing_labels_on_pr(monorepo, pr_number)
     logger.debug(f"Monorepo PR #{pr_number} labels: {source_labels}")
@@ -61,7 +61,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     config = load_repo_config(args.config)
     sync_labels(client, args.repo, args.pr, config, args.dry_run)
 

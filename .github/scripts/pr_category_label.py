@@ -33,7 +33,7 @@ import os
 import logging
 from pathlib import Path
 from typing import List, Optional
-from github_cli_client import GitHubCLIClient
+from github_api_client import GitHubAPIClient
 
 logger = logging.getLogger(__name__)
 
@@ -89,7 +89,7 @@ def main(argv=None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     changed_files = [file for file in client.get_changed_files(args.repo, int(args.pr))]
     existing_labels = client.get_existing_labels_on_pr(args.repo, int(args.pr))
     desired_labels = compute_desired_labels(changed_files)

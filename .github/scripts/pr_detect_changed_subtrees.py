@@ -34,7 +34,7 @@ import sys
 import os
 import logging
 from typing import List, Optional, Set
-from github_cli_client import GitHubCLIClient
+from github_api_client import GitHubAPIClient
 from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 
@@ -88,7 +88,7 @@ def main(argv=None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     config = load_repo_config(args.config)
     changed_files = [file for file in client.get_changed_files(args.repo, int(args.pr))]
     valid_prefixes = get_valid_prefixes(config)
