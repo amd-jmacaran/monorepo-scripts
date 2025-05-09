@@ -42,30 +42,6 @@ class GitHubAPIClient:
             return {}
         return response.json()
 
-    def _get_json(self, url: str, error_msg: str) -> dict:
-        """Helper method to perform a GET request and return the JSON response, handling pagination."""
-        page = 1
-        per_page = 100
-        all_results = []
-        # First request to determine the number of pages
-        response = self.session.get(f"{url}?page={page}&per_page={per_page}", headers=self.github_app_client.get_authenticated_headers())
-        if not response.ok:
-            logger.error(f"{error_msg}: {response.status_code} {response.text}")
-            return {}
-        data = response.json()
-        all_results.extend(data)
-        # Check pagination headers to determine if more pages exist
-        total_pages = self._get_total_pages(response)  # Implement this function to get the total number of pages from headers
-        # If more than 1 page, iterate over the remaining pages
-        for page in range(2, total_pages + 1):
-            response = self.session.get(f"{url}?page={page}&per_page={per_page}", headers=self.github_app_client.get_authenticated_headers())
-            if not response.ok:
-                logger.error(f"{error_msg}: {response.status_code} {response.text}")
-                break
-            data = response.json()
-            all_results.extend(data)
-        return all_results
-
     def _request_json(self, method: str, url: str, json: dict, error_msg: str) -> dict:
         """Helper method to perform a request and return JSON response with dry-run option."""
         response = self.session.request(method, url, headers=self.github_app_client.get_authenticated_headers(), json=json)
