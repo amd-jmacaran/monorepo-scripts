@@ -32,17 +32,17 @@ class GitHubAPIClient:
         self.session = requests.Session()
         self.github_app_client = GitHubAppClient()
 
-    def _get_json(self, url: str, headers: dict, error_msg: str) -> dict:
+    def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return JSON response."""
-        response = self.session.get(url, headers=headers)
+        response = self.session.get(url, headers=self.github_app_client.get_authenticated_headers())
         if not response.ok:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
             return {}
         return response.json()
 
-    def _request_json(self, method: str, url: str, json: dict, headers: dict, error_msg: str) -> dict:
+    def _request_json(self, method: str, url: str, json: dict, error_msg: str) -> dict:
         """Helper method to perform a request and return JSON response."""
-        response = self.session.request(method, url, headers=headers, json=json)
+        response = self.session.request(method, url, headers=self.github_app_client.get_authenticated_headers(), json=json)
         if not response.ok:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
             return {}
@@ -67,35 +67,30 @@ class GitHubAPIClient:
 
     def get_head_sha_for_pr(self, repo: str, pr_number: int) -> Optional[str]:
         """Fetch the head SHA for a given pull request number in a repository."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         url = f"{self.api_url}/repos/{repo}/pulls/{pr_number}"
-        data = self._get_json(url, headers, f"Failed to fetch PR #{pr_number} in {repo}")
+        data = self._get_json(url, f"Failed to fetch PR #{pr_number} in {repo}")
         return data.get("head", {}).get("sha")
 
     def get_branch_name_for_pr(self, repo: str, pr_number: int) -> Optional[str]:
         """Fetch the head branch name for a given pull request number in a repository."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         url = f"{self.api_url}/repos/{repo}/pulls/{pr_number}"
-        data = self._get_json(url, headers, f"Failed to fetch PR #{pr_number} in {repo}")
+        data = self._get_json(url, f"Failed to fetch PR #{pr_number} in {repo}")
         return data.get("head", {}).get("ref")
 
     def get_check_runs_for_ref(self, repo: str, ref: str) -> list:
         """Fetch check runs for a specific reference in a repository."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         url = f"{self.api_url}/repos/{repo}/commits/{ref}/check-runs"
-        data = self._get_json(url, headers, f"Failed to get check runs for {repo}@{ref}")
+        data = self._get_json(url, f"Failed to get check runs for {repo}@{ref}")
         return data.get("check_runs", [])
 
     def get_pr_by_head_branch(self, repo: str, head_branch: str) -> Optional[dict]:
         """Fetch the PR object for a given head branch in a repository, if it exists."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         url = f"{self.api_url}/repos/{repo}/pulls?head={repo.split('/')[0]}:{head_branch}&state=open"
-        data = self._get_json(url, headers, f"Failed to get PRs for {repo} with head {head_branch}")
+        data = self._get_json(url, f"Failed to get PRs for {repo} with head {head_branch}")
         return data[0] if data else None
 
     def get_check_run_by_name(self, repo: str, sha: str, name: str) -> Optional[dict]:
         """Return the check run with a given name for a specific commit SHA, if it exists."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         check_runs = self.get_check_runs_for_ref(repo, sha)
         for check in check_runs:
             if check["name"] == name:
@@ -106,7 +101,6 @@ class GitHubAPIClient:
                          details_url: str, conclusion: str, completed_at: str,
                          title: str, summary: str) -> dict:
         """Create or update a check run for a specific commit SHA."""
-        headers = self.github_app_client.get_authenticated_headers_for_repo(repo)
         existing = self.get_check_run_by_name(repo, sha, name)
         payload = self._generate_check_run_payload(name, sha, status, details_url,
                                                    conclusion, completed_at, title, summary)
@@ -115,8 +109,8 @@ class GitHubAPIClient:
             check_id = existing["id"]
             url = f"{self.api_url}/repos/{repo}/check-runs/{check_id}"
             logger.debug(f"Updating check run '{name}' for {repo}@{sha}")
-            return self._request_json("PATCH", url, payload, headers, f"Failed to update check run '{name}'")
+            return self._request_json("PATCH", url, payload, f"Failed to update check run '{name}'")
         else:
             url = f"{self.api_url}/repos/{repo}/check-runs"
             logger.debug(f"Creating new check run '{name}' for {repo}@{sha}")
-            return self._request_json("POST", url, payload, headers, f"Failed to create check run '{name}'")
+            return self._request_json("POST", url, payload, f"Failed to create check run '{name}'")
