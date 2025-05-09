@@ -74,7 +74,8 @@ jobs:
       - name: Fan out child PRs
         if: steps.detect.outputs.subtrees
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         run: |
           python .github/scripts/pr_fanout.py \
             --repo "${{ github.repository }}" \

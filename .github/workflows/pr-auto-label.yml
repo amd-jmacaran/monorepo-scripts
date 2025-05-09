@@ -52,7 +52,8 @@ jobs:
       - name: Determine PR Number (workflow_run case only)
         id: pr_number
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
