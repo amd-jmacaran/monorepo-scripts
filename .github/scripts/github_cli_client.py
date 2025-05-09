@@ -17,10 +17,8 @@ Requirements:
 
 import subprocess
 import json
-import os
 import logging
 from typing import List, Optional
-from github_app_client import GitHubAppClient
 
 logger = logging.getLogger(__name__)
 
@@ -30,7 +28,6 @@ class GitHubCLIClient:
         """Initialize the GitHub CLI client."""
         if not self._gh_available():
             raise EnvironmentError("GitHub CLI (`gh`) is not installed or not in PATH.")
-        self._authenticate_with_github_app()
 
     def _gh_available(self) -> bool:
         """Check if GitHub CLI is available."""
@@ -39,13 +36,6 @@ class GitHubCLIClient:
             return True
         except subprocess.CalledProcessError:
             return False
-
-    def _authenticate_with_github_app(self) -> None:
-        """Authenticate the GitHub CLI using the GitHub App token."""
-        github_app_client = GitHubAppClient()
-        token = github_app_client.token
-        os.environ["GH_TOKEN"] = token
-        logger.debug("Authenticated GitHub CLI with GitHub App token.")
 
     def _run_gh_command(self, args: List[str], dry_run: Optional[bool] = False) -> subprocess.CompletedProcess:
         """Run a `gh` CLI command and return the result."""
