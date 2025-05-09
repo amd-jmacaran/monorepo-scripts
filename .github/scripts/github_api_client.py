@@ -16,25 +16,25 @@ Requires:
 Author: Your Name
 """
 
-import os
 import requests
 import logging
 from typing import Optional
+from time import time
+from github_app_client import GitHubAppClient
 
 logger = logging.getLogger(__name__)
 
 class GitHubAPIClient:
+
     def __init__(self) -> None:
-        """Initialize the GitHub API client with a personal access token."""
-        self.token = os.environ.get("GH_TOKEN")
-        if not self.token:
-            raise RuntimeError("GitHub token must be provided via GH_TOKEN env variable.")
+        """Initialize the GitHub API client using GitHub App authentication."""
+        self.api_url = "https://api.github.com"
         self.session = requests.Session()
+        github_app_client = GitHubAppClient()
         self.session.headers.update({
-            "Authorization": f"Bearer {self.token}",
+            "Authorization": f"Bearer {github_app_client.token}",
             "Accept": "application/vnd.github+json",
         })
-        self.api_url = "https://api.github.com"
 
     def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return JSON response."""
