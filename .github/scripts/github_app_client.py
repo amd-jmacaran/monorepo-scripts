@@ -34,8 +34,7 @@ class GitHubAppClient:
         if not private_key or not app_id:
             raise RuntimeError("Environment variables missing for GitHub App usage.")
         self.token = self._generate_jwt()
-        self.installation_id = self._get_installation_id()
-        logger.debug(f"GitHub App Client initialized with installation ID: {self.installation_id}")
+        logger.debug("GitHub App Client initialized.")
 
     def _generate_jwt(self) -> str:
         """Generate a JWT for authenticating as the GitHub App."""
@@ -47,19 +46,6 @@ class GitHubAppClient:
         encoded_jwt = jwt.encode(payload, os.environ.get("APP_PRIVATE_KEY"), algorithm="RS256")
         return encoded_jwt
 
-    def _get_installation_id(self) -> Optional[int]:
-        """Fetch the installation ID for the GitHub App."""
-        url = f"https://api.github.com/app/installations"
-        response = requests.get(url, headers=self._auth_header())
-        if response.ok:
-            installations = response.json()
-            if installations:
-                return installations[0]["id"]
-            else:
-                raise RuntimeError("No installations found for the GitHub App.")
-        else:
-            raise RuntimeError(f"Failed to fetch installations: {response.status_code} {response.text}")
-
     def _auth_header(self) -> dict:
         """Return the authorization header for making API requests."""
         return {
@@ -67,18 +53,30 @@ class GitHubAppClient:
             "Accept": "application/vnd.github+json",
         }
 
-    def get_access_token(self) -> str:
-        """Generate an access token for the app's installation."""
-        url = f"https://api.github.com/app/installations/{self.installation_id}/access_tokens"
+    def get_installation_id_for_repo(self, repo_full_name: str) -> int:
+        """Get installation ID for a specific repository."""
+        url = f"https://api.github.com/repos/{repo_full_name}/installation"
+        response = requests.get(url, headers=self._auth_header())
+        logger.debug(f"Installation ID for {repo_full_name}: {response.json()}")
+        if response.ok:
+            return response.json()["id"]
+        else:
+            raise RuntimeError(f"Failed to get installation for {repo_full_name}: {response.status_code} {response.text}")
+
+    def get_access_token_for_repo(self, repo_full_name: str) -> str:
+        """Get an installation access token for the specified repository."""
+        installation_id = self.get_installation_id_for_repo(repo_full_name)
+        url = f"https://api.github.com/app/installations/{installation_id}/access_tokens"
         response = requests.post(url, headers=self._auth_header())
+        logger.debug(f"Access token for {repo_full_name}: {response.json()}")
         if response.ok:
             return response.json()["token"]
         else:
-            raise RuntimeError(f"Failed to create access token: {response.status_code} {response.text}")
+            raise RuntimeError(f"Failed to get token for {repo_full_name}: {response.status_code} {response.text}")
 
-    def get_authenticated_headers(self) -> dict:
-        """Return headers with installation access token for API requests."""
+    def get_authenticated_headers_for_repo(self, repo_full_name: str) -> dict:
+        """Return headers with installation access token for a specific repository."""
         return {
-            "Authorization": f"token {self.get_access_token()}",
+            "Authorization": f"token {self.get_access_token_for_repo(repo_full_name)}",
             "Accept": "application/vnd.github+json",
         }
