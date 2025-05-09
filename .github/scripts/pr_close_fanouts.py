@@ -30,6 +30,7 @@ import logging
 from typing import Optional, List
 from github_api_client import GitHubAPIClient
 from config_loader import load_repo_config
+from utils_fanout_naming import FanoutNaming
 
 logger = logging.getLogger(__name__)
 
@@ -52,7 +53,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     client = GitHubAPIClient()
     config = load_repo_config(args.config)
     for entry in config:
-        branch = f"monorepo-pr-{args.pr}-{entry.name}"
+        branch = FanoutNaming.compute_branch_name(args.pr, entry.name)
         pr = client.get_pr_by_head_branch(entry.url, branch)
         if pr:
             number = pr["number"]
