@@ -45,6 +45,20 @@ class GitHubAPIClient:
                 links[rel] = url
         return links
 
+    def _get_total_pages(self, response) -> int:
+        """Extract the total number of pages from the response's Link header."""
+        try:
+            # Get the total page count from the 'Link' header if available
+            if 'link' in response.headers:
+                link_header = response.headers['link']
+                # Example: <https://api.github.com/repositories/12345678/issues?page=2>; rel="next", <https://api.github.com/repositories/12345678/issues?page=5>; rel="last"
+                match = re.search(r'page=(\d+)\s*>; rel="last"', link_header)
+                if match:
+                    return int(match.group(1))  # Return the total number of pages
+        except Exception as e:
+            logger.error(f"Failed to extract total pages: {e}")
+        return 1  # Default to 1 page if no pagination info is found
+
     def _get_json(self, url: str, error_message: str) -> Any:
         """Fetch JSON from GitHub API. Automatically handles pagination if present."""
         # If the request has pagination, the return type is a list, otherwise it's a dict
