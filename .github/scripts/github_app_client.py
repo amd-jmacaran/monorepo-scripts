@@ -17,8 +17,8 @@ Requirements:
 
 import os
 import jwt
-import time
 import requests
+from time import time
 from typing import Optional
 import logging
 
