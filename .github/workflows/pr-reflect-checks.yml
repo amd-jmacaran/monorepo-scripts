@@ -52,16 +52,14 @@ jobs:
 
       - name: Reflect Checks
         run: |
-          # Disable prompts in GitHub CLI  
-          gh config set prompt disabled  
-  
-          # List all open pull requests for the current repository  
-          prs=$(gh pr list --repo "${{ github.repository }}" --state open --json number --jq '.[].number')  
-  
-          # Iterate over each pull request and reflect the checks  
-          for pr in $prs; do  
-            echo "Processing PR #${pr}"  
-            python .github/scripts/pr_reflect_checks.py --repo "${{ github.repository }}" --pr "${pr}"  
+          # Disable prompts in GitHub CLI
+          gh config set prompt disabled
+          # List all open pull requests for the current repository
+          prs=$(gh pr list --repo "${{ github.repository }}" --state open --json number --jq '.[].number')
+          # Iterate over each pull request and reflect the checks
+          for pr in $prs; do
+            echo "Processing PR #${pr}"
+            python .github/scripts/pr_reflect_checks.py --repo "${{ github.repository }}" --pr "${pr}" --debug
           done
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

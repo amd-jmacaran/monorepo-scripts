@@ -68,8 +68,10 @@ def main(argv: Optional[List[str]] = None) -> None:
         for check in checks:
             synthetic_name = f"{entry.name}: {check['name']}"
             status = check["status"]
-            conclusion = check.get("conclusion", "neutral")
             details_url = check.get("details_url", "")
+            conclusion = check.get("conclusion", None)
+            completed_at = check.get("completed_at", None)
+            title = check.get("output", {}).get("title", synthetic_name)
             summary = check.get("output", {}).get("summary", "")
             existing = monorepo_checks.get(synthetic_name)
             needs_update = (
@@ -85,8 +87,11 @@ def main(argv: Optional[List[str]] = None) -> None:
             if not args.dry_run:
                 client.upsert_check_run(
                     args.repo, synthetic_name, monorepo_pr_sha,
-                    status, details_url, conclusion, summary
+                    status, details_url, conclusion, completed_at,
+                    title, summary
                 )
+            else:
+                logger.info(f"Dry run: would reflect check: {check}")
 
 if __name__ == "__main__":
     main()
