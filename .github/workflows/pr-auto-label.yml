@@ -52,7 +52,9 @@ jobs:
       - name: Determine PR Number (workflow_run case only)
         id: pr_number
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           if [ "${{ github.event_name }}" = "workflow_run" ]; then
             BRANCH_NAME="${{ github.event.workflow_run.head_branch }}"
@@ -65,7 +67,9 @@ jobs:
       - name: Compute Category Labels for PR
         id: compute_labels
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_category_label.py \
             --repo ${{ github.repository }} \
@@ -84,7 +88,9 @@ jobs:
 
       - name: Sync Custom Labels from Monorepo PR
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_fanout_sync_labels.py \
             --repo ${{ github.repository }} \

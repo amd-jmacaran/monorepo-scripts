@@ -25,8 +25,9 @@ jobs:
             --repo ROCm/rocm-libraries \
             --pr ${{ github.event.client_payload.pr }}
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
 #
 # Each subrepo can include this step after running CI:
 #

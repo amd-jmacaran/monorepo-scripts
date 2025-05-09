@@ -54,7 +54,9 @@ jobs:
       - name: Detect changed subtrees
         id: detect
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_detect_changed_subtrees.py \
             --repo "${{ github.repository }}" \
@@ -75,7 +77,9 @@ jobs:
       - name: Fan out child PRs
         if: steps.detect.outputs.subtrees
         env:
-          GH_TOKEN: ${{ secrets.MONOREPO_BOT_TOKEN }}
+          APP_ID: ${{ secrets.APP_ID }}
+          APP_PRIVATE_KEY: ${{ secrets.APP_PRIVATE_KEY }}
+          APP_INSTALLATION_ID: ${{ secrets.APP_INSTALLATION_ID }}
         run: |
           python .github/scripts/pr_fanout.py \
             --repo "${{ github.repository }}" \
