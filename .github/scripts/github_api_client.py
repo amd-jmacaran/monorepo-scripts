@@ -31,14 +31,11 @@ class GitHubAPIClient:
         self.api_url = "https://api.github.com"
         self.session = requests.Session()
         github_app_client = GitHubAppClient()
-        self.session.headers.update({
-            "Authorization": f"Bearer {github_app_client.token}",
-            "Accept": "application/vnd.github+json",
-        })
+        self.headers = github_app_client.get_authenticated_headers()
 
     def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return JSON response."""
-        response = self.session.get(url)
+        response = self.session.get(url, headers=self.headers)
         if not response.ok:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
             return {}
@@ -46,7 +43,7 @@ class GitHubAPIClient:
 
     def _request_json(self, method: str, url: str, json: dict, error_msg: str) -> dict:
         """Helper method to perform a request and return JSON response."""
-        response = self.session.request(method, url, json=json)
+        response = self.session.request(method, url, headers=self.headers, json=json)
         if not response.ok:
             logger.error(f"{error_msg}: {response.status_code} {response.text}")
             return {}

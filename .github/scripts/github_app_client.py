@@ -75,3 +75,10 @@ class GitHubAppClient:
             return response.json()["token"]
         else:
             raise RuntimeError(f"Failed to create access token: {response.status_code} {response.text}")
+
+    def get_authenticated_headers(self) -> dict:
+        """Return headers with installation access token for API requests."""
+        return {
+            "Authorization": f"token {self.get_access_token()}",
+            "Accept": "application/vnd.github+json",
+        }
