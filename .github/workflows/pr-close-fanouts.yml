@@ -27,7 +27,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install python requirements
-        run: pip install pydantic
+        run: pip install cryptography PyJWT pydantic requests
 
       - name: Set up Git user
         run: |
