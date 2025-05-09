@@ -28,8 +28,7 @@ Example Usage:
 import argparse
 import logging
 from typing import Optional, List
-from github_cli_client import GitHubCLIClient
-from repo_config_model import RepoEntry
+from github_api_client import GitHubAPIClient
 from config_loader import load_repo_config
 from utils_fanout_naming import FanoutNaming
 
@@ -51,7 +50,7 @@ def main(argv: Optional[List[str]] = None) -> None:
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO
     )
-    client = GitHubCLIClient()
+    client = GitHubAPIClient()
     config = load_repo_config(args.config)
     for entry in config:
         branch = FanoutNaming.compute_branch_name(args.pr, entry.name)

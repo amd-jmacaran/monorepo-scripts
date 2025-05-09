@@ -27,7 +27,6 @@ import logging
 from typing import List, Optional
 
 from github_api_client import GitHubAPIClient
-from repo_config_model import RepoEntry
 from config_loader import load_repo_config
 from utils_fanout_naming import FanoutNaming
 
