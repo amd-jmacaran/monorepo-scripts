@@ -82,6 +82,7 @@ def subtree_push(entry: RepoEntry, branch: str, prefix: str, subrepo_full_url: s
 
 def main(argv: Optional[List[str]] = None) -> None:
     """Main function to execute the PR fanout logic."""
+    subprocess.run("echo $SHELL", shell=True)
     args = parse_arguments(argv)
     logging.basicConfig(
         level=logging.DEBUG if args.debug else logging.INFO

@@ -14,20 +14,20 @@
 name: Fanout Subtree PRs
 
 on:
-    pull_request:
-      types:
-        - opened
-        - synchronize
-        - reopened
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
 
+# ensure that the workflow is not running for the same PR multiple times at once
 concurrency:
   group: pr-fanout-${{ github.event.pull_request.number }}
   cancel-in-progress: false
-  # ensure that the workflow is not running for the same PR multiple times at once
 
 jobs:
   fanout:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Generate a token
         id: generate-token
@@ -91,4 +91,5 @@ jobs:
           python .github/scripts/pr_fanout.py \
             --repo "${{ github.repository }}" \
             --pr "${{ github.event.pull_request.number }}" \
-            --subtrees "${{ steps.detect.outputs.subtrees }}"
+            --subtrees "${{ steps.detect.outputs.subtrees }}" \
+            --debug
