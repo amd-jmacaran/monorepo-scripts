@@ -34,63 +34,13 @@ class GitHubAPIClient:
         self.session = requests.Session()
         self.github_app_client = GitHubAppClient()
 
-    def _parse_link_header(link_header: str) -> dict:
-        """Parse GitHub's Link header into a dictionary of rel => URL."""
-        links = {}
-        for part in link_header.split(','):
-            if 'rel=' in part:
-                section = part.strip().split(';')
-                url = section[0].strip()[1:-1]
-                rel = section[1].strip().split('=')[1].strip('"')
-                links[rel] = url
-        return links
-
-    def _get_total_pages(self, response) -> int:
-        """Extract the total number of pages from the response's Link header."""
-        try:
-            # Get the total page count from the 'Link' header if available
-            if 'link' in response.headers:
-                link_header = response.headers['link']
-                # Example: <https://api.github.com/repositories/12345678/issues?page=2>; rel="next", <https://api.github.com/repositories/12345678/issues?page=5>; rel="last"
-                match = re.search(r'page=(\d+)\s*>; rel="last"', link_header)
-                if match:
-                    return int(match.group(1))  # Return the total number of pages
-        except Exception as e:
-            logger.error(f"Failed to extract total pages: {e}")
-        return 1  # Default to 1 page if no pagination info is found
-
-    def _get_json(self, url: str, error_message: str) -> Any:
-        """Fetch JSON from GitHub API. Automatically handles pagination if present."""
-        # If the request has pagination, the return type is a list, otherwise it's a dict
-        headers = self.github_app_client.get_authenticated_headers()
-        results = []
-        # Auto-add per_page=100 for paginated endpoints
-        if 'per_page=' not in url:
-            if '?' in url:
-                url += '&per_page=100'
-            else:
-                url += '?per_page=100'
-        logger.debug(f"GET {url}")
-        response = requests.get(url, headers=headers)
-        if response.status_code != 200:
-            raise RuntimeError(f"{error_message}: {response.status_code} {response.text}")
-        try:
-            data = response.json()
-        except ValueError:
-            raise RuntimeError(f"{error_message}: Invalid JSON response")
-        # If it's a list, check for pagination
-        if isinstance(data, list):
-            results.extend(data)
-            while 'next' in self._parse_link_header(response.headers.get('Link', '')):
-                next_url = self._parse_link_header(response.headers['Link'])['next']
-                logger.debug(f"GET {next_url}")
-                response = requests.get(next_url, headers=headers)
-                if response.status_code != 200:
-                    raise RuntimeError(f"{error_message}: {response.status_code} {response.text}")
-                results.extend(response.json())
-            return results
-        else:
-            return data  # It's a dict, not paginated
+    def _get_json(self, url: str, error_msg: str) -> dict:
+        """Helper method to perform a GET request and return JSON response."""
+        response = self.session.get(url, headers=self.github_app_client.get_authenticated_headers())
+        if not response.ok:
+            logger.error(f"{error_msg}: {response.status_code} {response.text}")
+            return {}
+        return response.json()
 
     def _get_json(self, url: str, error_msg: str) -> dict:
         """Helper method to perform a GET request and return the JSON response, handling pagination."""
